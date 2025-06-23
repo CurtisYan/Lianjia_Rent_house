@@ -2,6 +2,7 @@ const express = require('express');
 const { spawn } = require('child_process');
 const cors = require('cors');
 const path = require('path');
+const process = require('process');
 
 const app = express();
 const PORT = 3000;
@@ -50,10 +51,14 @@ app.post('/api/update-data', (req, res) => {
   const executeDataUpdate = () => {
     res.write(`开始爬取 ${areaName} 地区数据...\n`);
     
+    // 跨平台Python命令检测
+    const pythonCmd = process.platform === 'win32' ? 'py' : 'python3';
+    
     // 第一步：启动爬虫脚本
-    const crawlerProcess = spawn('python', ['../scripts/guangzhou_main.py', areaName], {
+    const crawlerProcess = spawn(pythonCmd, ['../scripts/guangzhou_main.py', areaName], {
       cwd: __dirname,
-      stdio: ['pipe', 'pipe', 'pipe']
+      stdio: ['pipe', 'pipe', 'pipe'],
+      shell: true
     });
     
     // 处理爬虫输出
@@ -77,9 +82,10 @@ app.post('/api/update-data', (req, res) => {
         res.write(`开始数据预处理...\n`);
         
         // 第二步：启动预处理脚本
-        const preprocessProcess = spawn('python', ['../scripts/preprocess_data.py'], {
+        const preprocessProcess = spawn(pythonCmd, ['../scripts/preprocess_data.py'], {
           cwd: __dirname,
-          stdio: ['pipe', 'pipe', 'pipe']
+          stdio: ['pipe', 'pipe', 'pipe'],
+          shell: true
         });
         
         // 处理预处理输出

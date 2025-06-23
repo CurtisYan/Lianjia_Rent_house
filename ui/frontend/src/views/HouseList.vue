@@ -769,7 +769,7 @@ export default {
       updateCompleted.value = false
       
       try {
-        const response = await fetch('http://localhost:3001/api/update-data', {
+        const response = await fetch('api/update-data', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

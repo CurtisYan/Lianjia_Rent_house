@@ -132,7 +132,7 @@ chmod +x start.sh
 
 **终端1 - 启动API服务器:**
 ```bash
-node server.js
+node ./backend/server.js
 ```
 
 **终端2 - 启动前端开发服务器:**
@@ -144,8 +144,8 @@ npm run dev
 ## 📝 使用说明
 
 ### 访问地址
-- **前端界面**: http://localhost:5176
-- **API服务器**: http://localhost:3001
+- **前端界面**: http://localhost:5173
+- **API服务器**: http://localhost:3000
 
 ### 基本操作流程
 
@@ -203,11 +203,55 @@ python guangzhou_main.py 天河
 
 ## 🐛 常见问题
 
+### Q: Windows环境兼容性问题
+**A**: Windows环境需要特殊配置：
+
+**1. Python命令问题**
+- Windows上Python命令可能是`py`而不是`python`
+- 检查你的Python命令：
+```bash
+py --version     # Windows推荐
+python --version # 通用
+python3 --version # Linux/Mac
+```
+
+**2. 修改backend/server.js** 
+如果遇到"退出码: 9009"或"爬虫脚本启动失败"错误，需要修改Python调用：
+
+找到两处`spawn`调用，修改为：
+```javascript
+// 第一处（约第49行）
+const crawlerProcess = spawn('py', ['../scripts/guangzhou_main.py', areaName], {
+  cwd: __dirname,
+  stdio: ['pipe', 'pipe', 'pipe'],
+  shell: true
+});
+
+// 第二处（约第70行）  
+const preprocessProcess = spawn('py', ['../scripts/preprocess_data.py'], {
+  cwd: __dirname,
+  stdio: ['pipe', 'pipe', 'pipe'],
+  shell: true
+});
+```
+
+**关键修改点：**
+- 将`'python'`改为`'py'`（Windows Python启动器）
+- 添加`shell: true`（Windows需要shell模式）
+- 确保语法正确（注意逗号）
+
+**3. 路径分隔符**
+- 项目已使用`path.join()`处理跨平台路径，无需额外配置
+
+**4. 权限问题**
+- Windows可能需要以管理员身份运行命令行
+- 或者给Node.js/Python添加防火墙例外
+
 ### Q: 爬取数据时出现网络错误
 **A**: 检查网络连接，或等待片刻后重试。系统内置重试机制。
 
 ### Q: 前端页面无法加载数据
-**A**: 确保API服务器(端口3001)正常运行，检查控制台是否有错误信息。
+**A**: 确保API服务器(端口3000)正常运行，检查控制台是否有错误信息。
 
 ### Q: Python模块导入错误
 **A**: 确保已安装所需Python包:
@@ -217,8 +261,8 @@ pip install requests parsel
 
 ### Q: 端口冲突
 **A**: 修改以下文件中的端口配置:
-- `server.js`: 修改API服务器端口 (默认3001)
-- `ui/frontend/vite.config.js`: 修改前端端口 (默认5176)
+- `backend/server.js`: 修改API服务器端口 (默认3000)
+- `ui/frontend/vite.config.js`: 修改前端端口 (默认5173)
 
 ### Q: Mac/Linux权限问题
 **A**: 给启动脚本执行权限:

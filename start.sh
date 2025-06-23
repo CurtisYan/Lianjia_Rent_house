@@ -30,12 +30,27 @@ cd ..
 
 echo "✅ 后端服务器已启动 (PID: $SERVER_PID)"
 echo "📡 API服务器: http://localhost:3000"
-echo "🌐 前端页面: 打开 ui/index.html"
-echo ""
-echo "⚠️  按 Ctrl+C 停止服务"
 
-# 等待中断信号
-trap "echo '🛑 正在停止服务器...'; kill $SERVER_PID 2>/dev/null; exit 0" INT
+# 启动前端开发服务器
+echo "🎨 启动前端开发服务器..."
+cd ui/frontend
+if [ ! -d "node_modules" ]; then
+    echo "📦 安装前端依赖..."
+    npm install
+fi
+
+# 后台启动前端开发服务器
+npm run dev &
+FRONTEND_PID=$!
+cd ../..
+
+echo "✅ 前端服务器已启动 (PID: $FRONTEND_PID)"
+echo "🌐 前端页面: http://localhost:5173"
+echo ""
+echo "⚠️  按 Ctrl+C 停止所有服务"
+
+# 等待中断信号，同时停止前后端服务器
+trap "echo '🛑 正在停止服务器...'; kill $SERVER_PID $FRONTEND_PID 2>/dev/null; exit 0" INT
 
 # 保持脚本运行
 wait 

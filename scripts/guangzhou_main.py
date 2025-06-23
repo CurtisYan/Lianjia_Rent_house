@@ -64,8 +64,8 @@ def crawl(area_name, max_count=3000):
         }
 
     print_flush(f"开始爬取 {area_name} 地区，目标URL: {area_url}")
-    # 爬取第 2-200页
-    urls = [area_url] + [f"{area_url}pg{page}/" for page in range(2, 201)]
+    # 爬取第 2-100页
+    urls = [area_url] + [f"{area_url}pg{page}/" for page in range(2, 101)]
     results = []
     
     print_flush(f"准备爬取 {len(urls)} 个页面...")
@@ -83,8 +83,8 @@ def crawl(area_name, max_count=3000):
             completed_count += 1
             # 百分比
             progress = int((completed_count / total_urls) * 100)
-            # 可视化进度条
-            progress_bar = '█' * (progress // 2) + '░' * (50 - progress // 2)
+            # 可视化进度条 - Windows兼容性：使用ASCII字符
+            progress_bar = '#' * (progress // 2) + '-' * (50 - progress // 2)
             
             # 实时输出进度，使用\r覆盖同一行
             print_flush(f"\r爬取进度: {progress:3d}%|{progress_bar}| {completed_count}/{total_urls} 已获取{len(results)}条数据")
@@ -187,4 +187,4 @@ if __name__ == "__main__":
     # 最大爬取数量
     crawl(area_name, max_count=3000)
     end_time = time.time()
-    print_flush(f"⏱️  总耗时: {end_time - start_time:.2f} 秒")
+    print_flush(f"总耗时: {end_time - start_time:.2f} 秒")
