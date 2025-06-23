@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-广州链家租房数据预处理脚本
-从本地data目录读取原始CSV数据，进行清洗和标准化，输出到前端public/data目录
-"""
+# 广州链家租房数据预处理脚本
+# 从本地data目录读取原始CSV数据，进行清洗和标准化，输出到前端public/data目录
 
 import csv
 import os
@@ -42,7 +40,7 @@ ORIENTATION_MAPPING = {
 }
 
 def clean_price(price_str):
-    """清洗价格数据"""
+    # 清洗价格数据
     if not price_str or price_str == 'null':
         return 0
     
@@ -55,7 +53,7 @@ def clean_price(price_str):
         return 0
 
 def clean_area(area_str):
-    """清洗面积数据"""
+    # 清洗面积数据
     if not area_str or area_str == 'null':
         return 0
     
@@ -69,7 +67,7 @@ def clean_area(area_str):
     return 0
 
 def standardize_district(district):
-    """标准化区域名称"""
+    # 标准化区域名称
     if not district or district == 'null':
         return '未知'
     
@@ -78,7 +76,7 @@ def standardize_district(district):
     return DISTRICT_MAPPING.get(district_clean, district)
 
 def standardize_orientation(orientation):
-    """标准化朝向"""
+    # 标准化朝向
     if not orientation or orientation == 'null':
         return '未知'
     
@@ -90,7 +88,7 @@ def standardize_orientation(orientation):
     return orientation
 
 def clean_layout(layout):
-    """清洗户型数据"""
+    # 清洗户型数据
     if not layout or layout == 'null':
         return '未知'
     
@@ -106,7 +104,7 @@ def clean_layout(layout):
     return layout
 
 def parse_tags(tags_str):
-    """解析标签字符串"""
+    # 解析标签字符串
     if not tags_str or tags_str == 'null':
         return []
     
@@ -115,7 +113,7 @@ def parse_tags(tags_str):
     return tags
 
 def preprocess_house_data(input_file, output_file):
-    """预处理单个房源数据文件"""
+    # 预处理单个房源数据文件
     print(f"处理文件: {input_file}")
     
     if not os.path.exists(input_file):
@@ -139,7 +137,7 @@ def preprocess_house_data(input_file, output_file):
         
         # 处理数据行
         for row_num, row in enumerate(reader, start=3):
-            if len(row) < 12:  # 确保有足够的列
+            if len(row) < 12:  # 为了确保有足够的列
                 skip_count += 1
                 continue
             
@@ -223,7 +221,7 @@ def preprocess_house_data(input_file, output_file):
         return 0
 
 def main():
-    """主函数"""
+    # 主函数
     print("开始数据预处理...")
     
     # 路径设置
@@ -241,7 +239,7 @@ def main():
     csv_files = list(data_dir.glob("houses_*.csv"))
     
     if not csv_files:
-        print("❌ 没有找到需要处理的CSV文件")
+        print("没有找到需要处理的CSV文件")
         return
     
     total_processed = 0
