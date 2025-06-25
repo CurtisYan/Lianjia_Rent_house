@@ -101,9 +101,9 @@
       </div>
     </div>
 
-    <!-- 数据状态面板 -->
+    <!-- 数据状态 -->
     <div class="bg-white rounded-2xl p-6 shadow-lg border border-white/20 backdrop-blur-sm mb-8">
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between mb-6">
         <div class="flex items-center space-x-4">
           <div class="w-10 h-10 bg-gradient-to-r from-slate-500 to-slate-600 rounded-xl flex items-center justify-center">
             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,6 +111,45 @@
             </svg>
           </div>
           <h3 class="text-xl font-bold text-slate-800">数据状态</h3>
+        </div>
+      </div>
+      
+      <!-- 数据状态详情 -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-slate-50 rounded-xl p-4">
+          <div class="flex items-center space-x-3 mb-2">
+            <div class="w-3 h-3 rounded-full" :class="dataStatus.color"></div>
+            <span class="text-sm font-medium text-slate-700">{{ dataStatus.text }}</span>
+          </div>
+          <div class="text-lg font-bold text-slate-800">{{ dataStatus.count }} 条</div>
+          <div class="text-sm text-slate-500">数据记录</div>
+        </div>
+        
+        <div class="bg-slate-50 rounded-xl p-4">
+          <div class="flex items-center space-x-3 mb-2">
+            <div class="w-3 h-3 rounded-full" :class="qualityStatus.color"></div>
+            <span class="text-sm font-medium text-slate-700">质量{{ qualityStatus.text }}</span>
+          </div>
+          <div class="text-lg font-bold" :class="qualityColor">{{ dataQuality.total }}分</div>
+          <div class="text-sm text-slate-500">数据质量</div>
+        </div>
+        
+        <div class="bg-slate-50 rounded-xl p-4">
+          <div class="flex items-center space-x-3 mb-2">
+            <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+            <span class="text-sm font-medium text-slate-700">加载状态</span>
+          </div>
+          <div class="text-lg font-bold text-slate-800">{{ loading ? '加载中' : '已完成' }}</div>
+          <div class="text-sm text-slate-500">{{ loading ? '正在处理...' : '数据就绪' }}</div>
+        </div>
+        
+        <div class="bg-slate-50 rounded-xl p-4">
+          <div class="flex items-center space-x-3 mb-2">
+            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+            <span class="text-sm font-medium text-slate-700">数据范围</span>
+          </div>
+          <div class="text-lg font-bold text-slate-800">{{ selectedCity === 'guangzhou' ? '广州' : selectedCity }}</div>
+          <div class="text-sm text-slate-500">{{ selectedDistrict || '全部区域' }}</div>
         </div>
       </div>
     </div>
@@ -124,7 +163,7 @@
         </svg>
         数据源配置
       </h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label class="block text-sm font-semibold text-slate-700 mb-3">选择城市</label>
           <select v-model="selectedCity" @change="onCityChange" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 bg-white shadow-sm transition-all duration-200 hover:shadow-md">
@@ -138,21 +177,8 @@
           <label class="block text-sm font-semibold text-slate-700 mb-3">区域筛选</label>
           <select v-model="selectedDistrict" @change="onDistrictChange" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 bg-white shadow-sm transition-all duration-200 hover:shadow-md">
             <option value="">全部区域</option>
-            <option value="天河区">天河区</option>
-            <option value="黄埔区">黄埔区</option>
-            <option value="增城区">增城区</option>
-            <option value="从化区">从化区</option>
+            <option v-for="district in availableDistricts" :key="district.code" :value="district.name">{{ district.name }}</option>
           </select>
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-3">数据状态</label>
-          <div class="bg-slate-50 rounded-xl p-4">
-            <div class="flex items-center space-x-3 mb-2">
-              <div class="w-3 h-3 rounded-full" :class="dataStatus.color"></div>
-              <span class="text-sm font-medium text-slate-700">{{ dataStatus.text }}</span>
-            </div>
-            <span class="text-sm text-slate-500">{{ dataStatus.count }} 条记录</span>
-          </div>
         </div>
       </div>
     </div>
@@ -259,17 +285,42 @@ const previousStats = ref(null)
 
 // 计算属性
 const filteredData = computed(() => {
+  if (!rawData.value || rawData.value.length === 0) {
+    return []
+  }
+  
+  // 如果选择了具体区域，进行筛选
+  if (selectedDistrict.value) {
+    return rawData.value.filter(item => item.district === selectedDistrict.value)
+  }
+  
+  // 否则返回全量数据
   return rawData.value
 })
 
 const availableDistricts = computed(() => {
-  return ['天河区', '黄埔区', '增城区', '从化区']
+  if (!rawData.value || rawData.value.length === 0) {
+    return []
+  }
+  
+  // 从实际数据中提取不重复的地区
+  const districts = [...new Set(rawData.value.map(item => item.district))]
+    .filter(district => district && district.trim() !== '' && district !== '未知')
+    .sort()
+  
+  return districts.map(district => ({
+    code: district.toLowerCase().replace(/[区县]/g, ''),
+    name: district,
+    count: rawData.value.filter(item => item.district === district).length
+  }))
 })
 
 const statisticsSummary = computed(() => {
   if (!analyzer.value) return {}
   
-  const stats = analyzer.value.getStatisticsSummary()
+  // 使用筛选后的数据进行统计
+  const tempAnalyzer = new HouseDataAnalyzer(filteredData.value)
+  const stats = tempAnalyzer.getStatisticsSummary()
   const currentStats = {
     totalCount: stats.totalCount,
     avgPrice: stats.avgPrice,
@@ -345,9 +396,11 @@ const dataQuality = computed(() => {
     }
   }
   
-  const quality = analyzer.value.calculateQualityMetrics()
-  const totalRecords = rawData.value.length
-  const validRecords = analyzer.value.cleanedData.length
+  // 使用筛选后的数据计算质量
+  const tempAnalyzer = new HouseDataAnalyzer(filteredData.value)
+  const quality = tempAnalyzer.calculateQualityMetrics()
+  const totalRecords = filteredData.value.length
+  const validRecords = tempAnalyzer.cleanedData.length
   
   return {
     ...quality,
@@ -389,65 +442,44 @@ const loadData = async () => {
       throw new Error(`抱歉，目前只支持广州地区的真实数据分析。其他城市数据正在收集中...`)
     }
     
-    // 根据是否选择了区域来决定加载哪个文件
-    let fileName
-    if (selectedDistrict.value) {
-      // 如果选择了具体区域，直接加载该区域的数据文件
-      const districtMap = {
-        '天河区': 'houses_guangzhou_tianhe.csv',
-        '黄埔区': 'houses_guangzhou_huangpu.csv',
-        '增城区': 'houses_guangzhou_zengcheng.csv',
-        '从化区': 'houses_guangzhou_conghua.csv'
-      }
-      fileName = districtMap[selectedDistrict.value]
-      
-      if (!fileName) {
-        throw new Error(`区域 ${selectedDistrict.value} 的数据文件不存在。目前支持的区域：天河区、黄埔区、增城区、从化区`)
-      }
-    } else {
-      // 如果没有选择区域，加载全市数据
-      fileName = 'houses_guangzhou_all.csv'
-    }
+    // 始终加载全市数据文件，然后通过计算属性进行区域筛选
+    const fileName = 'houses_guangzhou_all.csv'
     
-    console.log(`尝试加载数据文件: ${fileName}`)
+    console.log(`加载全量数据文件: ${fileName}`)
     const response = await fetch(`/data/${fileName}?t=${Date.now()}`) // 添加时间戳防止缓存
     
     if (!response.ok) {
       // 如果全市数据文件不存在，尝试加载天河区数据作为示例
-      if (fileName === 'houses_guangzhou_all.csv') {
-        console.log('全市数据文件不存在，加载天河区数据作为示例')
-        const fallbackResponse = await fetch(`/data/houses_guangzhou_tianhe.csv?t=${Date.now()}`)
-        if (!fallbackResponse.ok) {
-          throw new Error('数据文件不存在，请检查数据源')
-        }
-        const csvText = await fallbackResponse.text()
-        
-        const tempAnalyzer = new HouseDataAnalyzer([])
-        const parsedData = tempAnalyzer.parseCSVData(csvText)
-        
-        console.log(`Fallback数据解析结果: ${parsedData.length} 条记录`)
-        
-        if (parsedData.length === 0) {
-          console.error('Fallback数据也解析失败')
-          throw new Error('示例数据文件也无法解析，请检查数据格式')
-        }
-        
-        rawData.value = parsedData
-        analyzer.value = new HouseDataAnalyzer(parsedData)
-        
-        console.log(`Fallback清洗后数据: ${analyzer.value.cleanedData.length} 条`)
-        
-        // 更新提示信息
-        if (analyzer.value.cleanedData.length > 0) {
-          error.value = '提示：当前显示的是天河区数据（示例数据）'
-          setTimeout(() => { error.value = '' }, 3000)
-        } else {
-          error.value = '示例数据加载成功但清洗后无有效数据'
-        }
-        return
+      console.log('全市数据文件不存在，加载天河区数据作为示例')
+      const fallbackResponse = await fetch(`/data/houses_guangzhou_tianhe.csv?t=${Date.now()}`)
+      if (!fallbackResponse.ok) {
+        throw new Error('数据文件不存在，请检查数据源')
+      }
+      const csvText = await fallbackResponse.text()
+      
+      const tempAnalyzer = new HouseDataAnalyzer([])
+      const parsedData = tempAnalyzer.parseCSVData(csvText)
+      
+      console.log(`Fallback数据解析结果: ${parsedData.length} 条记录`)
+      
+      if (parsedData.length === 0) {
+        console.error('Fallback数据也解析失败')
+        throw new Error('示例数据文件也无法解析，请检查数据格式')
       }
       
-      throw new Error(`数据文件不存在: ${fileName}`)
+      rawData.value = parsedData
+      analyzer.value = new HouseDataAnalyzer(parsedData)
+      
+      console.log(`Fallback清洗后数据: ${analyzer.value.cleanedData.length} 条`)
+      
+      // 更新提示信息
+      if (analyzer.value.cleanedData.length > 0) {
+        error.value = '提示：当前显示的是天河区数据（示例数据）'
+        setTimeout(() => { error.value = '' }, 3000)
+      } else {
+        error.value = '示例数据加载成功但清洗后无有效数据'
+      }
+      return
     }
     
     const csvText = await response.text()
@@ -486,6 +518,7 @@ const loadData = async () => {
     
     console.log(`成功加载 ${parsedData.length} 条数据记录`)
     console.log(`清洗后有效数据: ${analyzer.value.cleanedData.length} 条`)
+    console.log(`可用区域:`, availableDistricts.value.map(d => `${d.name}(${d.count}条)`).join(', '))
     
     // 如果清洗后数据为空，提供更详细的错误信息但不抛出异常
     if (analyzer.value.cleanedData.length === 0) {
@@ -507,7 +540,7 @@ const loadData = async () => {
   }
 }
 
-const onCityChange = () => {
+const onCityChange = async () => {
   // 保存城市选择到localStorage
   localStorage.setItem('selectedCity', selectedCity.value)
   
@@ -516,6 +549,7 @@ const onCityChange = () => {
   
   rawData.value = []
   analyzer.value = null
+  
   if (selectedCity.value) {
     loadData()
   }
@@ -525,10 +559,11 @@ const onDistrictChange = () => {
   // 保存区域选择到localStorage
   localStorage.setItem('selectedDistrict', selectedDistrict.value)
   
-  // 当区域改变时，重新加载数据
-  if (selectedCity.value) {
-    loadData()
-  }
+  console.log(`区域切换到: ${selectedDistrict.value || '全部区域'}`)
+  console.log(`筛选后数据量: ${filteredData.value.length} 条`)
+  
+  // 当区域改变时，数据会通过 filteredData 计算属性自动重新筛选
+  // 不需要重新加载数据
 }
 
 const exportAnalysisReport = () => {
@@ -558,8 +593,8 @@ const exportAnalysisReport = () => {
 }
 
 // 生命周期钩子
-onMounted(() => {
-  // 页面加载时自动加载广州数据
+onMounted(async () => {
+  // 自动加载广州数据
   loadData()
 })
 

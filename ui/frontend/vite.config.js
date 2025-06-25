@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   
   // 获取后端服务器地址，如果没有设置则使用默认值
-  const apiBaseUrl = env.VITE_API_BASE_URL || 'http://localhost:3001'
+  const apiBaseUrl = env.VITE_API_BASE_URL || 'http://localhost:3000'
   
   return {
     plugins: [

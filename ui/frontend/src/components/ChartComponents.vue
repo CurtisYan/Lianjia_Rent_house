@@ -11,7 +11,7 @@
       </div>
       
       <!-- 图表类型选择 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">快速筛选</label>
           <div class="flex flex-wrap gap-2">
@@ -35,20 +35,6 @@
                     class="px-3 py-1 rounded-full text-sm transition-colors">
               全部数据
             </button>
-          </div>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">数据状态</label>
-          <div class="flex items-center">
-            <div class="text-sm">
-              <div class="flex items-center space-x-2">
-                <div class="w-3 h-3 rounded-full" :class="dataStatus.color"></div>
-                <span>{{ dataStatus.text }}</span>
-              </div>
-              <div class="text-gray-500 mt-1">
-                {{ displayedDataCount }}条记录
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -565,22 +551,6 @@ const overviewStats = computed(() => {
     communityCount,
     avgArea,
     districtCount
-  }
-})
-
-// 计算属性
-const displayedDataCount = computed(() => {
-  if (!props.data || props.data.length === 0) return 0
-  
-  switch (quickFilter.value) {
-    case 'highPrice':
-      return props.data.filter(item => item.price > 6000).length
-    case 'lowPrice':
-      return props.data.filter(item => item.price <= 1500).length
-    case 'largeArea':
-      return props.data.filter(item => item.area > 80).length
-    default:
-      return props.data.length
   }
 })
 
